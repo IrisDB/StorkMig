@@ -4,16 +4,10 @@
 #                                                       #
 #-------------------------------------------------------#
 
-# Changes compared to version 01:
-#	I added the assignment of bursts to a certain time
-
-
-# Project: White Storks - Affenberg & Care Centre releases 2019
-# Authors: Andrea Flack & Iris Bontekoe
-#		Code was written by Andrea, Iris adjusted the code and added comments
+# Project: 
+# Authors: Andrea Flack & Iris Bontekoe (code was written by Andrea, Iris adjusted the code and added comments)
 # Date started: 14 May 2020
 # Date last modified: 27 May 2020
-# Date data download: 14 May 2020
 # R version: 3.6.2
 # Description: This function splits that data into bursts per individual
 
