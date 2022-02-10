@@ -16,7 +16,7 @@
 
 
 
-SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
+SplitGPSBursts <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
   
   # Load pakages and functions where necessary
   if(!require("lubridate")){install.packages("lubridate");library(lubridate)}
@@ -85,7 +85,7 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   # Create the list BurstData to save the burst data in
   BurstData <- list()
   
-    #-------------------------#
+  #-------------------------#
   #- Reduce data to bursts -#
   #-------------------------#
   
@@ -125,18 +125,21 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   #--------------------------#
   
   # Make a data frame with the time on which bursts should have started
+  
+  min.date=min(floor_date(timestamps(data),"day"))
+  max.date=max(floor_date(timestamps(data),"day"))
   bseq <- data.frame(
     StartTime=c(
-      seq(min(floor_date(timestamps(data),"day")),max(floor_date(timestamps(data),"day"))+days(1),by="15 mins")
+      seq(min.date,max.date+days(1),by="15 mins")
       ,
-      seq(min(floor_date(timestamps(data),"day"))+hours(10)+minutes(40),max(floor_date(timestamps(data),"day"))+days(1)+hours(10)+minutes(40),by="1 days")
+      seq(min.date+hours(10)+minutes(40),max.date+days(1)+hours(10)+minutes(40),by="1 days")
     )
     
     ,
     EndTime=c(
-      seq(min(floor_date(timestamps(data),"day"))+minutes(12),max(floor_date(timestamps(data),"day"))+days(1)+minutes(12),by="15 mins")
+      seq(min.date+minutes(12),max.date+days(1)+minutes(12),by="15 mins")
       ,
-      seq(min(floor_date(timestamps(data),"day"))+hours(10)+minutes(40)+minutes(12),max(floor_date(timestamps(data),"day"))+days(1)+hours(10)+minutes(40)+minutes(12),by="1 days")
+      seq(min.date+hours(10)+minutes(40)+minutes(12),max.date+days(1)+hours(10)+minutes(40)+minutes(12),by="1 days")
     )
   )
   
@@ -155,6 +158,12 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   })
     
   data = moveStack(data.split)
+  # for(i in unique(DataFrame$BurstID)$BurstID){
+  #   
+  #   DataFrame[DataFrame$BurstID==i,"Burst_A"] <- bseq[nearest(unique(as.numeric(DataFrame[DataFrame$BurstID==i,"timestamp"]))[1],as.numeric(bseq$StartTime)),"ID"]
+  #   
+  # }	
+  
   
   #--------------------------------------------#
   #- Save data frame and print end-statements -#
