@@ -147,7 +147,7 @@ SplitGPSBursts <- function(DataFrame,MaxTimeDiff=10,MinBurstLength=120){ # Start
 	bseq$ID <- seq(1:nrow(bseq))
 
 	# Match bursts with sequence
-	for(i in unique(DataFrame$BurstID)){
+	for(i in unique(DataFrame$BurstID)$BurstID){
 
 		DataFrame[DataFrame$BurstID==i,"Burst_A"] <- bseq[nearest(unique(as.numeric(DataFrame[DataFrame$BurstID==i,"timestamp"]))[1],as.numeric(bseq$StartTime)),"ID"]
 
