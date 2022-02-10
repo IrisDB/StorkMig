@@ -3,8 +3,9 @@
 
 ## Contents
 
-Function_nearest.R        -> finds the nearest burst out of a sequence for the start time of any given burst   
-Function_SplitGPSBursts   -> identifies GPS bursts, gives each burst a unique ID, and a second ID that is based on time sequence so that it is possible to identify simultaneously recorded GPS bursts.
-
-
+| File | Description |
+|:---|:---|
+| Function_nearest.R | finds the nearest burst out of a sequence for the start time of any given burst |
+| Function_SplitGPSBursts.R | identifies GPS bursts <br />  gives each burst a unique ID <br /> gives each burst a second ID that is based on time sequence |
+|  |  |
 
