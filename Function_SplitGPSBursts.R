@@ -1,3 +1,23 @@
+#-------------------------------------------------------#
+#                                                       #
+#--------------- Function SplitGPSBursts ---------------#
+#                                                       #
+#-------------------------------------------------------#
+
+# Project: 
+# Authors: Andrea Flack & Iris Bontekoe (code was written by Andrea, Iris adjusted the code and added comments)
+# Date started: 14 May 2020
+# Date last modified: 10 Feb 2022
+# R version: 3.6.2
+# Description: This function identifies GPS bursts, gives each burst a unique ID, and a second ID that is based on time sequence so that it is possible to identify simultaneously recorded GPS bursts.
+
+
+
+# Lists are build as follows:
+#	[[1]] is the first object within the list
+#	[[1]][1] is the first item in the first object in the list
+
+
 SplitGPSBursts <- function(DataFrame,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
   
   # Load pakages and functions where necessary
