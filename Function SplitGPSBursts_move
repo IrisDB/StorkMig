@@ -16,7 +16,7 @@
 
 
 
-SplitGPSBursts <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
+SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
   
   # Load pakages and functions where necessary
   if(!require("lubridate")){install.packages("lubridate");library(lubridate)}
