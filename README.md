@@ -11,3 +11,11 @@
 | Function_FlightClassification.py | determines for every data point whether the stork was flying and whether it was climbing or gliding. |
 | Function_FlightClassification.R | determines for every data point whether the stork was flying and whether it was climbing or gliding. |
 
+## ToDo list
+
+- Translate flight classification from Pyhton to R.
+- Add description of the order in which the functions should be used
+
+
+
+
