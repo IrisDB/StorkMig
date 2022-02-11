@@ -1,15 +1,16 @@
-#-------------------------------------------------------#
-#                                                       #
-#--------------- Function SplitGPSBursts ---------------#
-#                                                       #
-#-------------------------------------------------------#
+#-------------------------------------------------------------#
+#                                                             #
+#--------------- Function FlightClassification ---------------#
+#                                                             #
+#-------------------------------------------------------------#
 
 # Project: 
-# Authors: Andrea Flack & Iris Bontekoe (code was written by Andrea, Iris adjusted the code and added comments)
+# Authors: Iris Bontekoe
 # Date started: 14 May 2020
-# Date last modified: 10 Feb 2022
+# Date last modified: 08 October 2021
 # Python version: 3.9
 # Description: This script determines for every data point whether the stork was flying and whether it was climbing or gliding.
+
 
 # Define function FlightClassification that calculates climbing rates and classifies flight, climbing and gliding segments
 
