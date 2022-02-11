@@ -15,8 +15,9 @@
 ## input data is movestack
 
 
+## input data is movestack
 
-SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
+SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts_move
   
   # Load pakages and functions where necessary
   if(!require("lubridate")){install.packages("lubridate");library(lubridate)}
@@ -79,9 +80,16 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   #	is saved in "Breaks", together with a 0 and with the lenght of rows_onesecdiff
   #	This happens for every individual separately
   
-  Breaks <- lapply(1:length(data.ind),function(i) {c(0, which(diff(timestamps(data.ind[[i]])[rows_onesecdiff[[i]]]) > MaxTimeDiff), length(rows_onesecdiff[[i]]))})
-  attributes(Breaks[[1]])=NULL
-  attributes(Breaks[[2]])=NULL
+  Breaks <- lapply(1:length(data.ind),function(i) 
+    {
+    b=c(0,
+      which(diff(timestamps(data.ind[[i]])[rows_onesecdiff[[i]]]) > MaxTimeDiff),
+      length(rows_onesecdiff[[i]]))
+    attributes(b) = NULL
+    return(b)
+    }
+    )
+
   # Create the list BurstData to save the burst data in
   BurstData <- list()
   
@@ -89,7 +97,8 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   #- Reduce data to bursts -#
   #-------------------------#
   
-  for (i in 1:length(Breaks)){
+  for (i in 1:length(Breaks))
+    {
     tmp1 <- (sapply(seq(length(Breaks[[i]]) - 1), function(j) {list(rows_onesecdiff[[i]][(Breaks[[i]][j] + 1):Breaks[[i]][j+1]])}))
     # Burst has to be at least 120 (MinBurstLength) seconds long
     tmp2 <- (lapply(tmp1[lapply(tmp1,length)>MinBurstLength], function(i) {as.integer(seq(i[1],i[length(i)]+1))}))
@@ -110,7 +119,7 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   names(BurstData) <- names(data.ind)
   
   # Rejoin the data data frames of all individuals
-  BurstData2<-moveStack( BurstData)
+  BurstData2<-moveStack( BurstData, forceTz="UTC")
   
   # Assign individual BurstIDs based on tag number and Bno
   BurstData2$BurstID<-paste0(BurstData2$tag_local_identifier,"_",BurstData2$Bno)
@@ -150,21 +159,15 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   bseq$ID <- seq(1:nrow(bseq))
   
   # Match bursts with sequence
-  data.split =split(data)
+  data.split =split(data, data$BurstID)
   data.split = lapply(data.split,
-                                function(i) {
-                                      i$Burst_A <- bseq[nearest(unique(as.numeric(timestamps(i))[1]),as.numeric(bseq$StartTime)),"ID"]
-                                      return(i)
+                      function(i) {
+                      i$Burst_A <- bseq[nearest(unique(as.numeric(timestamps(i)))[1],as.numeric(bseq$StartTime)),"ID"]
+                      return(i)
   })
-    
-  data = moveStack(data.split)
-  # for(i in unique(DataFrame$BurstID)$BurstID){
-  #   
-  #   DataFrame[DataFrame$BurstID==i,"Burst_A"] <- bseq[nearest(unique(as.numeric(DataFrame[DataFrame$BurstID==i,"timestamp"]))[1],as.numeric(bseq$StartTime)),"ID"]
-  #   
-  # }	
-  
-  
+
+  data = moveStack(data.split, forceTz="UTC")
+
   #--------------------------------------------#
   #- Save data frame and print end-statements -#
   #--------------------------------------------#
@@ -176,4 +179,4 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   cat("\nThe input data frame now contains the extra columns BurstID and Burst_A\n\n")
   cat("Thank you very much for your patience and have a nice day!\n")
   
-} # End function SplitGPSBursts
+} # End function SplitGPSBursts_move
