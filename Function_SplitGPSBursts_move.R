@@ -16,6 +16,7 @@
 
 
 ## input data is movestack
+## input data is movestack
 
 SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts_move
   
@@ -44,7 +45,7 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   #----------------------------#
   #- Split data by individual -#
   #----------------------------#
-  
+
   data.ind <- split(data)
   
   #----------------------#
@@ -109,14 +110,16 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
       BurstData[[i]]$Bno <- mapply(rep, list(1:length(tmp2)), list(do.call(rbind, lapply(tmp2, function(x) length(x)))))
     }
   }
-  
-  
   #--------------------------------#
   #- Assign BurstIDs to DataFrame -#
   #--------------------------------#
   
   # Assign names of data.ind to BurstData
   names(BurstData) <- names(data.ind)
+  
+  ## remove individuals that do not have bursts
+  if (length(which(lapply(BurstData,nrow)==0))!=0)
+  BurstData = BurstData[-which(lapply(BurstData,nrow)==0)]
   
   # Rejoin the data data frames of all individuals
   BurstData2<-moveStack( BurstData, forceTz="UTC")
@@ -158,16 +161,17 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   # Give each time window an id
   bseq$ID <- seq(1:nrow(bseq))
   
-  # Match bursts with sequence
+  trackId = data@trackId
+  # Match bursts with sequence 
   data.split =split(data, data$BurstID)
   data.split = lapply(data.split,
                       function(i) {
                       i$Burst_A <- bseq[nearest(unique(as.numeric(timestamps(i)))[1],as.numeric(bseq$StartTime)),"ID"]
                       return(i)
   })
-
-  data = moveStack(data.split, forceTz="UTC")
-
+  ## re-stacking it very slow. Need to find out whether not splitting is faster. 
+  data = moveStack(data.split, forceTz="UTC",trackId = trackId)
+  data@trackId = trackId
   #--------------------------------------------#
   #- Save data frame and print end-statements -#
   #--------------------------------------------#
