@@ -1,3 +1,16 @@
+#-------------------------------------------------------#
+#                                                       #
+#--------------- Function SplitGPSBursts ---------------#
+#                                                       #
+#-------------------------------------------------------#
+
+# Project: 
+# Authors: Andrea Flack & Iris Bontekoe (code was written by Andrea, Iris adjusted the code and added comments)
+# Date started: 14 May 2020
+# Date last modified: 10 Feb 2022
+# Python version: 3.9
+# Description:
+
 # Define function FlightClassification that calculates climbing rates and classifies flight, climbing and gliding segments
 
 def FlightClassification(MinGroundSpeed=2.5,RunningWindowLength=15,MinFlightTime=15,MinNonFlightTime=5,MinClimbingRate=0.2,MaxDecliningRate=0):
