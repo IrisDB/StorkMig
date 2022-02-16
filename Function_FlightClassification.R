@@ -10,9 +10,10 @@
 # Project: 
 # Authors: Iris Bontekoe
 # Date started: 14 May 2020
-# Date last modified: 11 February 2022
+# Date last modified: 16 February 2022
 # R version: 
 # Description: This script determines for every data point whether the stork was flying and whether it was climbing or gliding.
+# Translated from Python script with the same name
 
 # Define function FlightClassification that calculates climbing rates and classifies flight, climbing and gliding segments
 FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,MinFlightTime=15,MinNonFlightTime=5,MinClimbingRate=0.2,MaxDecliningRate=0){ # Start function FlightClassification
@@ -22,21 +23,29 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     #---------------------------------#
    
     # Sort the data frame by individual and date
-    data<-data[order(data$tag.local.identifier,data$timestamp,data$BurstID),]
+    #data<-data[order(data$tag.local.identifier,data$timestamp,data$BurstID),]
     
-    # Make a list with all BurstIDs
-    BurstIDs<-unique(data$BurstID)
-# End of translation    
+    # Split the data by BurstID
+    data.burst<-split(data,data$BurstID)
+    
     #----------------------------#
     #- Calculate climbing rates -#
     #----------------------------#
     
-    # Make new columns to enter the values into
-    data$ClimbingRate<-NA
+    # Calculate climbing rates within each burst
+    data.burst<-lapply(data.burst,function(i){
+        
+        # Order the data by timestamp
+		i<-i[order(i$timestamp),];
+        i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
+		i$HeightDiff<-c(i[-1,]$height.above.ellipsoid-i[-nrow(i),]$height.above.ellipsoid,NA);
+        i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff)
+
+        return(i)
+        })
+# End of translation    
     
-    TimeDiff = data["timestamp"].diff().dt.total_seconds()
-    HeightDiff = data["height-above-ellipsoid"].diff()
-    ClimbingRate = (HeightDiff/TimeDiff).tolist()
+
     
     # Enter climbing rates into the data frame, only within bursts
 
