@@ -36,24 +36,22 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     data.burst<-lapply(data.burst,function(i){
         
         # Order the data by timestamp
-		i<-i[order(i$timestamp),];
+	i<-i[order(i$timestamp),];
+	
+	# Calculate the time difference between consecutive timestamps
         i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
-		i$HeightDiff<-c(i[-1,]$height.above.ellipsoid-i[-nrow(i),]$height.above.ellipsoid,NA);
-        i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff)
-
-        return(i)
-        })
-# End of translation    
+	
+	# Calculate the height difference
+	i$HeightDiff<-c(i[-1,]$height.above.ellipsoid-i[-nrow(i),]$height.above.ellipsoid,NA);
+	    
+	# Calculate the climbing rate in m/s altitude gain, based on the height difference and time difference
+        i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff);
+# End of translation
+	
+	return(i)
+	})
+	
     
-
-    
-    # Enter climbing rates into the data frame, only within bursts
-
-    # Make a list that indicates if a data point belongs to a burst
-    InBurst = [i for i, x in enumerate(data["BurstID"].diff()) if x == 0]
-    
-    # Enter ClimbingRate into the data, but only for the rows belonging to a burst
-    data.loc[data.index.isin(InBurst),"ClimbingRate"] = [ClimbingRate[idx] for idx in InBurst]
     
     # Shift the data one up to have the climbing rate between the current location and the next
     data.ClimbingRate = data.ClimbingRate.shift(-1)
