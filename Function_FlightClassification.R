@@ -62,8 +62,8 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     
     data["SmoothedClimbingRate"] = np.nan
     
-    HeightDiff = data["Smoothed_height-above-ellipsoid"].diff()
-    ClimbingRate = (HeightDiff/TimeDiff).tolist()
+    HeightDiff<-data["Smoothed_height-above-ellipsoid"].diff()
+    ClimbingRate<-HeightDiff/TimeDiff
     
     # Enter ClimbingRate into the data, but only for the rows belonging to a burst
     data.loc[data.index.isin(InBurst),"SmoothedClimbingRate"] = [ClimbingRate[idx] for idx in InBurst]
