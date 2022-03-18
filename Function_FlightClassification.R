@@ -10,10 +10,20 @@
 # Project: 
 # Authors: Iris Bontekoe
 # Date started: 14 May 2020
-# Date last modified: 16 February 2022
+# Date last modified: 18 March 2022
 # R version: 
 # Description: This script determines for every data point whether the stork was flying and whether it was climbing or gliding.
 # Translated from Python script with the same name
+
+# Note: Please ask the author before you use any part of this code
+
+data<-read.table("C:/Users/ibontekoe/Desktop/R_Analyses/DATA/DataAff_TempWind_Q.csv",header=T,sep=",",na.strings=c("","NA"))
+data$timestamp<-as.POSIXct(data$timestamp)
+
+data<-data[data$timestamp>as.POSIXct("2019-09-18")&data$timestamp<as.POSIXct("2019-09-20"),]
+data<-data[data$tag.local.identifier==6998|data$tag.local.identifier==7004|data$tag.local.identifier==7026|data$tag.local.identifier==7030,]
+
+nrow(data)
 
 # Define function FlightClassification that calculates climbing rates and classifies flight, climbing and gliding segments
 FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,MinFlightTime=15,MinNonFlightTime=5,MinClimbingRate=0.2,MaxDecliningRate=0){ # Start function FlightClassification
@@ -35,42 +45,32 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     # Calculate climbing rates within each burst
     data.burst<-lapply(data.burst,function(i){
         
-        # Order the data by timestamp
+      # Order the data by timestamp
 	i<-i[order(i$timestamp),];
 	
 	# Calculate the time difference between consecutive timestamps
-        i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
+      i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
 	
 	# Calculate the height difference
 	i$HeightDiff<-c(i[-1,]$height.above.ellipsoid-i[-nrow(i),]$height.above.ellipsoid,NA);
 	    
 	# Calculate the climbing rate in m/s altitude gain, based on the height difference and time difference
-        i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff);
-# End of translation
+      i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff);
+
+	# Calculate the running window/smoothed climbing rate
+	i$Smoothed_height_above_ellipsoid <- rollapply(i$height_above_ellipsoid, width=RunningWindowLength, FUN = mean, fill = NA);
+
+	i$HeightDiff_S<-c(i[-1,]$Smoothed_height_above_ellipsoid-i[-nrow(i),]$Smoothed_height_above_ellipsoid,NA);
+
+	i$SmoothedClimbingRate<-i$HeightDiff_S/i$TimeDiff;
+
 	
 	return(i)
 	})
 	
     
-    
-    # Shift the data one up to have the climbing rate between the current location and the next
-    data.ClimbingRate = data.ClimbingRate.shift(-1)
-    
-    # Calculate the running window/smoothed climbing rate
-    for BurstID in BurstIDs:
-        data.loc[data["BurstID"]==BurstID,"Smoothed_height-above-ellipsoid"] = uniform_filter1d(data.loc[data["BurstID"]==BurstID,"height-above-ellipsoid"], size=RunningWindowLength)
-    
-    data["SmoothedClimbingRate"] = np.nan
-    
-    HeightDiff<-data["Smoothed_height-above-ellipsoid"].diff()
-    ClimbingRate<-HeightDiff/TimeDiff
-    
-    # Enter ClimbingRate into the data, but only for the rows belonging to a burst
-    data.loc[data.index.isin(InBurst),"SmoothedClimbingRate"] = [ClimbingRate[idx] for idx in InBurst]
-    
-    # Shift the data one up to have the climbing rate between the current location and the next
-    data.SmoothedClimbingRate = data.SmoothedClimbingRate.shift(-1)
-    
+    # End of translation
+ 
 
     for BurstID in BurstIDs:
         
