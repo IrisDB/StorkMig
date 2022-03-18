@@ -45,17 +45,17 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     # Calculate climbing rates within each burst
     data.burst<-lapply(data.burst,function(i){
         
-      # Order the data by timestamp
+	# Order the data by timestamp
 	i<-i[order(i$timestamp),];
 	
 	# Calculate the time difference between consecutive timestamps
-      i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
+     	i$TimeDiff<-c(i[-1,"timestamp"]-i[-nrow(i),"timestamp"],as.difftime("NA"));
 	
 	# Calculate the height difference
 	i$HeightDiff<-c(i[-1,]$height.above.ellipsoid-i[-nrow(i),]$height.above.ellipsoid,NA);
 	    
 	# Calculate the climbing rate in m/s altitude gain, based on the height difference and time difference
-      i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff);
+      	i$ClimbingRate<-i$HeightDiff/as.numeric(i$TimeDiff);
 
 	# Calculate the running window/smoothed climbing rate
 	i$Smoothed_height_above_ellipsoid <- rollapply(i$height_above_ellipsoid, width=RunningWindowLength, FUN = mean, fill = NA);
@@ -69,7 +69,7 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
 	})
 	
     
-    # End of translation
+    #################### End of translation ####################
  
 
     for BurstID in BurstIDs:
