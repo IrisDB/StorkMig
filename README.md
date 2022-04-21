@@ -17,6 +17,6 @@
 - [ ] Add description of the order in which the functions should be used
 - [ ] Add other code
 - [ ] Update README
-
-
+- [X] Add ACC preparation code
+- [ ] Add R-version of ACC preparation code
 
