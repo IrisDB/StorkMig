@@ -13,9 +13,10 @@
 
 ## ToDo list
 
-- [] Translate flight classification from Pyhton to R.
-- Add description of the order in which the functions should be used
-- Add other code
+- [ ] Translate flight classification from Python to R
+- [ ] Add description of the order in which the functions should be used
+- [ ] Add other code
+- [ ] Update README
 
 
 
