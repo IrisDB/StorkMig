@@ -10,7 +10,7 @@
 # Project: 
 # Authors: Iris Bontekoe
 # Date started: 14 May 2020
-# Date last modified: 21 April 2022
+# Date last modified: 18 March 2022
 # R version: 
 # Description: This script determines for every data point whether the stork was flying and whether it was climbing or gliding.
 # Translated from Python script with the same name
@@ -32,6 +32,8 @@ MinNonFlightTime=5
 MinClimbingRate=0.2
 MaxDecliningRate=0
 
+library(zoo)
+
 # Define function FlightClassification that calculates climbing rates and classifies flight, climbing and gliding segments
 FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,MinFlightTime=15,MinNonFlightTime=5,MinClimbingRate=0.2,MaxDecliningRate=0){ # Start function FlightClassification
 
@@ -51,7 +53,7 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
     
     # Calculate climbing rates within each burst
     data.burst<-lapply(data.burst,function(i){
-  
+i<-data.burst[[24]]  
       # Order the data by timestamp
 	i<-i[order(i$timestamp),];
 	
@@ -88,37 +90,38 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
 
         # Replace the IDs with na when Flying is False
         i[i$Flying==F,]$FlyingID<-NA
-# End of translation
+        
+        i$RowID<-1:nrow(i)
+
         # Check if there is another segment less than MinNonFlightTime away
-        if len(FlyingID.dropna().unique())>1:
-            for i in FlyingID.dropna().unique():
-                
-                if i <= min(FlyingID.dropna().unique()):
-                    idx = max(FlyingID[FlyingID==i].index)
-                    indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                    indices = [j for (j, v) in zip(indices, [item in FlyingID.index for item in indices]) if v]
-                    if len(FlyingID[indices].dropna())>0:
-                        idxs = FlyingID[indices].isnull()
-                        idxs = idxs[idxs].index
-                        FlyingID[idxs] = i
+        if(length(unique(i[!(is.na(i$FlyingID)),]$FlyingID))>1){
+            for(id in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
+                if(id<=min(i[!(is.na(i$FlyingID)),]$FlyingID)){
+                    idx<-max(i[!(is.na(i$FlyingID))&i$FlyingID==id,]$RowID)
+                    indices<-(idx+1):(idx+MinNonFlightTime+1)
+                    indices<-indices[indices %in% i$RowID]
+			  if(nrow(i[!(is.na(i$FlyingID))&(i$RowID %in% indices),])>0){
+				i[is.na(i$FlyingID)&(i$RowID %in% indices),]$FlyingID<-id
+			  }
+                 }elif(id>=max(i[!(is.na(i$FlyingID)),]$FlyingID)){
+                    idx<-min(i[!(is.na(i$FlyingID))&i$FlyingID==id,]$RowID)
+                    indices<-(idx-MinNonFlightTime):idx
+                    indices<-indices[indices %in% i$RowID]
+                    if(nrow(i[!(is.na(i$FlyingID))&(i$RowID %in% indices),])>0){
+                        i[is.na(i$FlyingID)&(i$RowID %in% indices),]$FlyingID<-id
+			  }
+                 }else{
+                    idx<-max(i[!(is.na(i$FlyingID))&i$FlyingID==id,]$RowID)
+			  indices<-(idx+1):(idx+MinNonFlightTime+1)
+			  indices<-indices[indices %in% i$RowID]
+                    if(nrow(i[!(is.na(i$FlyingID))&(i$RowID %in% indices),])>0){
+                        i[is.na(i$FlyingID)&(i$RowID %in% indices),]$FlyingID<-id
+			  }
 
-                elif i >= max(FlyingID.dropna().unique()):
-                    idx = min(FlyingID[FlyingID==i].index)
-                    indices = [*range(idx-MinNonFlightTime,idx)]
-                    indices = [j for (j, v) in zip(indices, [item in FlyingID.index for item in indices]) if v]
-                    if len(FlyingID[indices].dropna())>0:
-                        idxs = FlyingID[indices].isnull()
-                        idxs = idxs[idxs].index
-                        FlyingID[idxs] = i
+		     }
 
-                else:
-                    idx = max(FlyingID[FlyingID==i].index)
-                    indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                    indices = [j for (j, v) in zip(indices, [item in FlyingID.index for item in indices]) if v]
-                    if len(FlyingID[indices].dropna())>0:
-                        idxs = FlyingID[indices].isnull()
-                        idxs = idxs[idxs].index
-                        FlyingID[idxs] = i
+# End of translation
+
 
                     idx = min(FlyingID[FlyingID==i].index)
                     indices = [*range(idx-MinNonFlightTime,idx)]
