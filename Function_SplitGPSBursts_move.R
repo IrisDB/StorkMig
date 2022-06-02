@@ -1,31 +1,13 @@
-#-------------------------------------------------------#
-#                                                       #
-#--------------- Function SplitGPSBursts ---------------#
-#                                                       #
-#-------------------------------------------------------#
-
-# Project: White stork migration 
-# Authors: Andrea Flack & Iris Bontekoe (code was written/adjusted on moveobjects by Andrea, Iris adjusted the code and added comments)
-# Date started: 14 May 2020
-# Date last modified: 10 Feb 2022
-# R version: 3.6.2
-# Description: This function identifies GPS bursts, gives each burst a unique ID, and a second ID that is based on time sequence so that it is possible to identify simultaneously recorded GPS bursts.
-
-
 ## input data is movestack
 
-
-## input data is movestack
-## input data is movestack
-
-SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts_move
+SplitGPSBursts <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start function SplitGPSBursts
   
   # Load pakages and functions where necessary
   if(!require("lubridate")){install.packages("lubridate");library(lubridate)}
   if(!require("raster")){install.packages("raster");library(raster)}
   if(!require("data.table")){install.packages("data.table");library(data.table)}
   
-  source("nearest.R")
+  source("~/R/projects/functions/nearest.R", echo=TRUE)
   
 
   #---------------------------------------#
@@ -161,17 +143,14 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   # Give each time window an id
   bseq$ID <- seq(1:nrow(bseq))
   
-  trackId = data@trackId
   # Match bursts with sequence 
-  data.split =split(data, data$BurstID)
-  data.split = lapply(data.split,
-                      function(i) {
-                      i$Burst_A <- bseq[nearest(unique(as.numeric(timestamps(i)))[1],as.numeric(bseq$StartTime)),"ID"]
-                      return(i)
-  })
-  ## re-stacking it very slow. Need to find out whether not splitting is faster. 
-  data = moveStack(data.split, forceTz="UTC",trackId = trackId)
-  data@trackId = trackId
+  
+  for (i in 1:length(unique(data$BurstID))){
+            idx = which(data@data$BurstID == unique(data$BurstID)[i])
+             data@data[idx,"Burst_A"] <- bseq[nearest(unique(as.numeric(timestamps(data[idx])))[1],as.numeric(bseq$StartTime)),"ID"]
+  }
+
+
   #--------------------------------------------#
   #- Save data frame and print end-statements -#
   #--------------------------------------------#
@@ -183,4 +162,4 @@ SplitGPSBursts_move <- function(data,MaxTimeDiff=10,MinBurstLength=120){ # Start
   cat("\nThe input data frame now contains the extra columns BurstID and Burst_A\n\n")
   cat("Thank you very much for your patience and have a nice day!\n")
   
-} # End function SplitGPSBursts_move
+} # End function SplitGPSBursts
