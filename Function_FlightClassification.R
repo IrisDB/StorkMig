@@ -10,7 +10,7 @@
 # Project: 
 # Authors: Iris Bontekoe
 # Date started: 14 May 2020
-# Date last modified: 18 March 2022
+# Date last modified: 2 June 2022
 # R version: 
 # Description: This script determines for every data point whether the stork was flying and whether it was climbing or gliding.
 # Translated from Python script with the same name
