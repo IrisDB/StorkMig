@@ -19,4 +19,5 @@
 - [ ] Update README
 - [X] Add ACC preparation code
 - [ ] Add R-version of ACC preparation code
+- [ ] Add licence
 
