@@ -131,94 +131,97 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
             		}
         	}
 
-	# Give merged segments the same number
-	i$FlyingID2<-cumsum(i$FlyingID==F)
+		# Give merged segments the same number
+		i$FlyingID2<-cumsum(i$FlyingID==F)
 
-        # Replace the values with nan where FlyingID is nan
-        i[is.na(i$FlyingID),]$FlyingID2<-NA
-        i$FlyingID<-i$FlyingID2
+        	# Replace the values with nan where FlyingID is nan
+        	i[is.na(i$FlyingID),]$FlyingID2<-NA
+        	i$FlyingID<-i$FlyingID2
 
-        # Replace the IDs with na if the segment is shorter than MinFlightTime
-        for(id2 in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
-		if(nrow(i[!(is.na(i$FlyingID))&i$FlyingID==id2,])<MinFlightTime){
-			i[!(is.na(i$FlyingID))&i$FlyingID==id2,]$FlyingID<-NA
+        	# Replace the IDs with na if the segment is shorter than MinFlightTime
+        	for(id2 in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
+			if(nrow(i[!(is.na(i$FlyingID))&i$FlyingID==id2,])<MinFlightTime){
+				i[!(is.na(i$FlyingID))&i$FlyingID==id2,]$FlyingID<-NA
+			}
 		}
-	}
 
 # End of translation
 
 
-        #---------------------#
-        #- Classify climbing -#
-        #---------------------#
-
-        
-        # Do this for every flying segment separately
-        for F_ID in FlyingID.dropna().unique():
+		#---------------------#
+		#- Classify climbing -#
+		#---------------------#
+  
+		# Do this for every flying segment separately
+		if(length(unique(i[!(is.na(i$FlyingID)),]$FlyingID))>1){
+			i$Climbing<-NA
+			i$ClimbingID<-NA
+			for(F_ID in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
             
-            # Set Climbing to T when the climbing rate is higher than MinClimbingRate and to F if not
-            Climbing = data[(data["BurstID"]==BurstID)&(data["FlyingID"]==F_ID)]["SmoothedClimbingRate"] >= MinClimbingRate
+				IBD<-i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]
+				# Set Climbing to T when the climbing rate is higher than MinClimbingRate and to F if not
+            		IBD$Climbing<-IBD$SmoothedClimbingRate>=MinClimbingRate
 
-            # Give each flight segment an ID (non-flight will also get an ID first)
-            ClimbingID = (Climbing == False).cumsum()
+            		# Give each flight segment an ID (non-flight will also get an ID first)
+            		IBD$ClimbingID<-cumsum(IBD$Climbing==F)
 
-            # Replace the IDs with na when Flying is False
-            ClimbingID[(Climbing == False)] = np.nan
+            		# Replace the IDs with na when Climbing is False
+            		IBD[IBD$Climbing==F,]$ClimbingID<-NA
 
-            # Check if there is another segment less than MinNonFlightTime away
-            if len(ClimbingID.dropna().unique())>1:
-                for i in ClimbingID.dropna().unique():
+            		# Check if there is another segment less than MinNonFlightTime away
+            		if(nrow(IBD[!(is.na(IBD$ClimbingID)),])>1){
+                			for(CID in unique(IBD[!(is.na(IBD$ClimbingID)),]$ClimbingID)){
+						
+						if(CID<=min(IBD[!(is.na(IBD$ClimbingID)),]$ClimbingID)){
+							idx<-max(IBD[!(is.na(IBD$ClimbingID))&IBD$ClimbingID==CID,]$RowID)
+                    				indices<-(idx+1):(idx+MinNonFlightTime+1)
+                    				indices<-indices[indices %in% IBD$RowID]
+			  				if(nrow(IBD[!(is.na(IBD$ClimbingID))&(IBD$RowID %in% indices),])>0){
+								IBD[is.na(IBD$ClimbingID)&(IBD$RowID %in% indices),]$ClimbingID<-CID
+			  				}
 
-                    if i <= min(ClimbingID.dropna().unique()):
-                        idx = max(ClimbingID[ClimbingID==i].index)
-                        indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                        indices = [j for (j, v) in zip(indices, [item in ClimbingID.index for item in indices]) if v]
-                        if len(ClimbingID[indices].dropna())>0:
-                            idxs = ClimbingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            ClimbingID[idxs] = i
+                 				}elif(CID>=max(IBD[!(is.na(IBD$ClimbingID)),]$ClimbingID)){
+                    				idx<-min(IBD[!(is.na(i$ClimbingID))&IBD$ClimbingID==CID,]$RowID)
+                    				indices<-(idx-MinNonFlightTime):idx
+                    				indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$ClimbingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(IBD$ClimbingID)&(IBD$RowID %in% indices),]$ClimbingID<-CID
+			  				}
                             
-                    elif i >= max(ClimbingID.dropna().unique()):
-                        idx = min(ClimbingID[ClimbingID==i].index)
-                        indices = [*range(idx-MinNonFlightTime,idx)]
-                        indices = [j for (j, v) in zip(indices, [item in ClimbingID.index for item in indices]) if v]
-                        if len(ClimbingID[indices].dropna())>0:
-                            idxs = ClimbingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            ClimbingID[idxs] = i
-                            
-                    else:
-                        
-                        idx = max(ClimbingID[ClimbingID==i].index)
-                        indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                        indices = [j for (j, v) in zip(indices, [item in ClimbingID.index for item in indices]) if v]
-                        if len(ClimbingID[indices].dropna())>0:
-                            idxs = ClimbingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            ClimbingID[idxs] = i
-                        
-                        idx = min(ClimbingID[ClimbingID==i].index)
-                        indices = [*range(idx-MinNonFlightTime,idx)]
-                        indices = [j for (j, v) in zip(indices, [item in ClimbingID.index for item in indices]) if v]
-                        if len(ClimbingID[indices].dropna())>0:
-                            idxs = ClimbingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            ClimbingID[idxs] = i
+                    			 }else{
+                    				idx<-max(IBD[!(is.na(IBD$ClimbingID))&IBD$ClimbingID==CID,]$RowID)
+		    					indices<-(idx+1):(idx+MinNonFlightTime+1)
+		    					indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$ClimbingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(i$ClimbingID)&(i$RowID %in% indices),]$ClimbingID<-CID
+		    					}
 
-            # Give merged segments the same number
-            ClimbingID2 = ClimbingID.isnull().cumsum()
+		    					idx<-min(IBD[!(is.na(IBD$ClimbingID))&IBD$ClimbingID==CID,]$RowID)
+                    				indices<-(idx-MinNonFlightTime):idx
+                   				indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$ClimbingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(IBD$ClimbingID)&(IBD$RowID %in% indices),]$ClimbingID<-CID
+                    				}
+		 				}
+					}
+        			}
 
-            # Replace the values with nan where FlyingID is nan
-            ClimbingID2[ClimbingID.isnull()] = np.nan
-            ClimbingID = ClimbingID2
+            		# Give merged segments the same number
+				IBD$ClimbingID2<-cumsum(IDB$ClimbingID==F)
 
-            # Replace the IDs with na if the segment is shorter than MinFlightTime
-            for i in ClimbingID.dropna().unique():
-                if len(ClimbingID[ClimbingID==i])<MinFlightTime:
-                    ClimbingID[ClimbingID==i] = np.nan
+				# Replace the values with nan where ClimbingID is nan
+        			IBD[is.na(IBD$ClimbingID),]$ClimbingID2<-NA
+        			IBD$ClimbingID<-IBD$ClimbingID2
 
-            # Enter the ClimbingIDs in the data
-            data.loc[(data["BurstID"]==BurstID)&(data["FlyingID"]==F_ID),"ClimbingID"] = ClimbingID          
+        			# Replace the IDs with na if the segment is shorter than MinFlightTime
+        			for(CID2 in unique(IBD[!(is.na(IBD$ClimbingID)),]$ClimbingID)){
+					if(nrow(IBD[!(is.na(IBD$ClimbingID))&IBD$ClimbingID==CID2,])<MinFlightTime){
+						IBD[!(is.na(IBD$ClimbingID))&IBD$ClimbingID==CID2,]$ClimbingID<-NA
+					}
+				}
+
+            		# Enter the ClimbingIDs in the data
+            		i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]$ClimbingID<-IBD$ClimbingID   
 
         #--------------------#
         #- Classify gliding -#
