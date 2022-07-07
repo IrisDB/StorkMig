@@ -145,9 +145,6 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
 			}
 		}
 
-# End of translation
-
-
 		#---------------------#
 		#- Classify climbing -#
 		#---------------------#
@@ -159,6 +156,7 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
 			for(F_ID in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
             
 				IBD<-i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]
+
 				# Set Climbing to T when the climbing rate is higher than MinClimbingRate and to F if not
             		IBD$Climbing<-IBD$SmoothedClimbingRate>=MinClimbingRate
 
@@ -223,78 +221,94 @@ FlightClassification<-function(data,MinGroundSpeed=2.5,RunningWindowLength=15,Mi
             		# Enter the ClimbingIDs in the data
             		i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]$ClimbingID<-IBD$ClimbingID   
 
+			}
+		}
+
         #--------------------#
         #- Classify gliding -#
         #--------------------#
         
-        # Do this for every flying segment separately
-        for F_ID in FlyingID.dropna().unique():
+		# Do this for every flying segment separately
+		if(length(unique(i[!(is.na(i$FlyingID)),]$FlyingID))>1){
+			i$Gliding<-NA
+			i$GlidingID<-NA
+			for(F_ID in unique(i[!(is.na(i$FlyingID)),]$FlyingID)){
             
-            # Set Gliding to T when the climbing rate is higher than MinClimbingRate and to F if not
-            Gliding = data[(data["BurstID"]==BurstID)&(data["FlyingID"]==F_ID)]["SmoothedClimbingRate"] <= MaxDecliningRate
+				IBD<-i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]
 
-            # Give each flight segment an ID (non-flight will also get an ID first)
-            GlidingID = (Gliding == False).cumsum()
+				# Set Gliding to T when the climbing rate is higher than MinClimbingRate and to F if not
+            		IBD$Gliding<-IBD$SmoothedClimbingRate<= MaxDecliningRate
 
-            # Replace the IDs with na when Flying is False
-            GlidingID[(Gliding == False)] = np.nan
+				# Give each flight segment an ID (non-flight will also get an ID first)
+            		IBD$GlidingID<-cumsum(IBD$Gliding==F)
 
-            # Check if there is another segment less than MinNonFlightTime away
-            if len(GlidingID.dropna().unique())>1:
-                for i in GlidingID.dropna().unique():
-                    
-                    if i <= min(GlidingID.dropna().unique()):
-                        idx = max(GlidingID[GlidingID==i].index)
-                        indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                        indices = [j for (j, v) in zip(indices, [item in GlidingID.index for item in indices]) if v]
-                        if len(GlidingID[indices].dropna())>0:
-                            idxs = GlidingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            GlidingID[idxs] = i
+            		# Replace the IDs with na when Gliding is False
+            		IBD[IBD$Gliding==F,]$GlidingID<-NA
+
+            		# Check if there is another segment less than MinNonFlightTime away
+            		if(nrow(IBD[!(is.na(IBD$GlidingID)),])>1){
+                			for(GID in unique(IBD[!(is.na(IBD$GlidingID)),]$GlidingID)){
+						
+						if(GID<=min(IBD[!(is.na(IBD$GlidingID)),]$GlidingID)){
+							idx<-max(IBD[!(is.na(IBD$GlidingID))&IBD$GlidingID==GID,]$RowID)
+                    				indices<-(idx+1):(idx+MinNonFlightTime+1)
+                    				indices<-indices[indices %in% IBD$RowID]
+			  				if(nrow(IBD[!(is.na(IBD$GlidingID))&(IBD$RowID %in% indices),])>0){
+								IBD[is.na(IBD$GlidingID)&(IBD$RowID %in% indices),]$GlidingID<-GID
+			  				}
+
+                 				}elif(GID>=max(IBD[!(is.na(IBD$GlidingID)),]$GlidingID)){
+                    				idx<-min(IBD[!(is.na(i$GlidingID))&IBD$GlidingID==GID,]$RowID)
+                    				indices<-(idx-MinNonFlightTime):idx
+                    				indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$GlidingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(IBD$GlidingID)&(IBD$RowID %in% indices),]$GlidingID<-GID
+			  				}
                             
-                    elif i >= max(GlidingID.dropna().unique()):
-                        idx = min(GlidingID[GlidingID==i].index)
-                        indices = [*range(idx-MinNonFlightTime,idx)]
-                        indices = [j for (j, v) in zip(indices, [item in GlidingID.index for item in indices]) if v]
-                        if len(GlidingID[indices].dropna())>0:
-                            idxs = GlidingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            GlidingID[idxs] = i
-                            
-                    else:
-                        
-                        idx = max(GlidingID[GlidingID==i].index)
-                        indices = [*range(idx+1,idx+MinNonFlightTime+1)]
-                        indices = [j for (j, v) in zip(indices, [item in GlidingID.index for item in indices]) if v]
-                        if len(GlidingID[indices].dropna())>0:
-                            idxs = GlidingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            GlidingID[idxs] = i
-                        
-                        idx = min(GlidingID[GlidingID==i].index)
-                        indices = [*range(idx-MinNonFlightTime,idx)]
-                        indices = [j for (j, v) in zip(indices, [item in GlidingID.index for item in indices]) if v]
-                        if len(GlidingID[indices].dropna())>0:
-                            idxs = GlidingID[indices].isnull()
-                            idxs = idxs[idxs].index
-                            GlidingID[idxs] = i
+                    			 }else{
+                    				idx<-max(IBD[!(is.na(IBD$GlidingID))&IBD$GlidingID==GID,]$RowID)
+		    					indices<-(idx+1):(idx+MinNonFlightTime+1)
+		    					indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$GlidingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(i$GlidingID)&(i$RowID %in% indices),]$GlidingID<-GID
+		    					}
 
-            # Give merged segments the same number
-            GlidingID2 = GlidingID.isnull().cumsum()
+		    					idx<-min(IBD[!(is.na(IBD$GlidingID))&IBD$GlidingID==GID,]$RowID)
+                    				indices<-(idx-MinNonFlightTime):idx
+                   				indices<-indices[indices %in% i$RowID]
+                    				if(nrow(IBD[!(is.na(IBD$GlidingID))&(IBD$RowID %in% indices),])>0){
+                        				IBD[is.na(IBD$GlidingID)&(IBD$RowID %in% indices),]$GlidingID<-GID
+                    				}
+		 				}
+					}
+        			}
 
-            # Replace the values with nan where FlyingID is nan
-            GlidingID2[GlidingID.isnull()] = np.nan
-            GlidingID = GlidingID2
+            		# Give merged segments the same number
+				IBD$GlidingID2<-cumsum(IDB$GlidingID==F)
 
-            # Replace the IDs with na if the segment is shorter than MinFlightTime
-            for i in GlidingID.dropna().unique():
-                if len(GlidingID[GlidingID==i])<MinFlightTime:
-                    GlidingID[GlidingID==i] = np.nan
+				# Replace the values with nan where GlidingID is nan
+        			IBD[is.na(IBD$GlidingID),]$GlidingID2<-NA
+        			IBD$GlidingID<-IBD$GlidingID2
 
-            # Enter the GlidingIDs in the data
-            data.loc[(data["BurstID"]==BurstID)&(data["FlyingID"]==F_ID),"GlidingID"] = GlidingID
-            
-    # Make the data available outside the function
-    return(data)
+        			# Replace the IDs with na if the segment is shorter than MinFlightTime
+        			for(GID2 in unique(IBD[!(is.na(IBD$GlidingID)),]$GlidingID)){
+					if(nrow(IBD[!(is.na(IBD$GlidingID))&IBD$GlidingID==GID2,])<MinFlightTime){
+						IBD[!(is.na(IBD$GlidingID))&IBD$GlidingID==GID2,]$GlidingID<-NA
+					}
+				}
+
+            		# Enter the GlidingIDs in the data
+            		i[!(is.na(i$FlyingID))&data$FlyingID==F_ID,]$GlidingID<-IBD$GlidingID   
+			}
+		}
+
+		return(i)
+	}
+
+	# Merge the data
+	data<-rbindlist(data.burst)
+
+	# Make the data available outside the function
+	return(data)
 }
                                                                  
