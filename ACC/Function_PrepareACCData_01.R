@@ -7,7 +7,7 @@
 # Project: White Stork Affenberg Releases
 # Author: Iris Bontekoe
 # Date started: 1 December 2020
-# Date last modified: 8 December 2020
+# Date last modified: 5 October 2022
 # R version: 4.0.3 
 # Description: Removes non-ACC data,
 #	data after dead and data before release (where applicable)
